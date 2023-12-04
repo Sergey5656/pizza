@@ -15,6 +15,8 @@ import {sortList} from "../components/Sort";
 const Home = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    const isMounted = React.useRef(false);
+    const isSearch = React.useRef(false);
     const {categoryId, sort} = useSelector((state) => state.filter);
     const {searchValue} = React.useContext(SearchContext);
 
@@ -24,6 +26,18 @@ const Home = () => {
     const onChangeCategory = (id) =>
         dispatch(setCategoryId(id));
 
+    const fetchPizzas = ()=>{
+        setIsLoading(true);
+        const category = categoryId > 0 ? `category=${categoryId}` : ''
+        const search = searchValue ? `&search=${searchValue}` : '';
+
+        axios.get(`https://63c98d10904f040a9660abb2.mockapi.io/items?${category}&sortBy=${sort.sortProperty}&order=desc&${search}`)
+            .then((res) => {
+                setItems(res.data);
+                setIsLoading(false);
+            })
+    }
+        //Если был первый рендер, то проверем URL параметры и созраняем в редакс
     React.useEffect(()=>{
         if(window.location.search){
             const params = qs.parse(window.location.search.substring(1))
@@ -34,32 +48,32 @@ const Home = () => {
                     ...params,
                     sort
                 })
-            )
+            );
+            isSearch.current=true;
         }
     },[]);
 
-
+ // Если был первый рендер, то запрашиваем пиццы
     React.useEffect(() => {
-        const category = categoryId > 0 ? `category=${categoryId}` : ''
-        const search = searchValue ? `&search=${searchValue}` : '';
-
-        axios.get(`https://63c98d10904f040a9660abb2.mockapi.io/items?${category}&sortBy=${sort.sortProperty}&order=desc&${search}`)
-            .then((res) => {
-                setItems(res.data);
-                setIsLoading(false);
-            })
-        window.scrollTo(0, 0);
+        window.scrollTo(0,0)
+        if(!isSearch.current){
+            fetchPizzas();
+        }
+isSearch.current=false;
     }, [categoryId, sort.sortProperty, searchValue]);
 
 
 
-
+//Если первый рендер уже был и параметры поиска изменились
     React.useEffect(() => {
-        const queryString = qs.stringify({
-            sortProperty: sort.sortProperty,
-            categoryId,
-        });
-        navigate(`?${queryString}`);
+        if(isMounted.current){
+            const queryString = qs.stringify({
+                sortProperty: sort.sortProperty,
+                categoryId,
+            });
+            navigate(`?${queryString}`);
+        }
+        isMounted.current=true;
     }, [categoryId, sort.sortProperty]);
 
 
