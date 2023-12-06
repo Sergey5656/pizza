@@ -35,14 +35,32 @@ const Home = () => {
             .then((res) => {
                 setItems(res.data);
                 setIsLoading(false);
+                console.log('фетч')
+
             })
     }
+
+
+//Если первый рендер уже был и параметры поиска изменились
+    React.useEffect(() => {
+        console.log('3юэ')
+        if(isMounted.current){
+            console.log('3юэвн')
+            const queryString = qs.stringify({
+                sortProperty: sort.sortProperty,
+                categoryId,
+            });
+            navigate(`?${queryString}`);
+        }
+        isMounted.current=true;
+    }, [categoryId, sort.sortProperty]);
+
         //Если был первый рендер, то проверем URL параметры и созраняем в редакс
     React.useEffect(()=>{
         if(window.location.search){
+            console.log(window.location.search)
             const params = qs.parse(window.location.search.substring(1))
             const sort = sortList.find((obj)=>obj.sortProperty===params.sortProperty)
-            console.log(sort)
             dispatch(
                 setFilter({
                     ...params,
@@ -53,29 +71,20 @@ const Home = () => {
         }
     },[]);
 
- // Если был первый рендер, то запрашиваем пиццы
+
+
+
+
+    // Если был первый рендер, то запрашиваем пиццы
     React.useEffect(() => {
+        console.log('2юэ')
         window.scrollTo(0,0)
-        if(!isSearch.current){
+        if(isSearch.current){
             fetchPizzas();
+            console.log('2юэв')
         }
-isSearch.current=false;
+        isSearch.current=true;
     }, [categoryId, sort.sortProperty, searchValue]);
-
-
-
-//Если первый рендер уже был и параметры поиска изменились
-    React.useEffect(() => {
-        if(isMounted.current){
-            const queryString = qs.stringify({
-                sortProperty: sort.sortProperty,
-                categoryId,
-            });
-            navigate(`?${queryString}`);
-        }
-        isMounted.current=true;
-    }, [categoryId, sort.sortProperty]);
-
 
 
 

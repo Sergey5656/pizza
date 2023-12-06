@@ -1,10 +1,28 @@
 import React, {useState} from 'react';
+import {useDispatch, useSelector} from "react-redux";
+import {addItems} from "../../redux/slices/cartSlice";
 
-
-function PizzaBlock({title, price, imageUrl, sizes, types, }){
 const typeNames = ['тонкое', 'традиционное'];
+
+function PizzaBlock({id, title, price, imageUrl, sizes, types, }){
+
 const [activeType, setActiveType] = React.useState(0);
 const [activeSize, setActiveSize] = React.useState(0);
+const dispatch = useDispatch();
+const cartItem = useSelector(state=>state.cart.items.find(obj=>obj.id===id));
+const addedCount = cartItem ? cartItem.count : 0;
+
+const onClickAdd = () => {
+    const item = {
+        id,
+        title,
+        price,
+        imageUrl,
+        type:typeNames[activeType],
+        size:sizes[activeSize],
+    };
+    dispatch(addItems(item));
+    }
 
     return (
         <div className="pizza-block-wrapper">
@@ -18,16 +36,16 @@ const [activeSize, setActiveSize] = React.useState(0);
             <div className="pizza-block__selector">
                 <ul>
                     {types.map((types)=>(
-                        <li key={types} onClick={()=>setActiveType(types)} className={activeType == types ? 'active' : ''}> {typeNames[types]}</li>))}
+                        <li key={types} onClick={()=>setActiveType(types)} className={activeType === types ? 'active' : ''}> {typeNames[types]}</li>))}
                 </ul>
                 <ul>
                     {sizes.map((size, i)=>(
-                        <li key={size} onClick={()=>setActiveSize(i)} className={activeSize == i ? 'active' : ''}> {size} см.</li>))}
+                        <li key={size} onClick={()=>setActiveSize(i)} className={activeSize === i ? 'active' : ''}> {size} см.</li>))}
                 </ul>
             </div>
             <div className="pizza-block__bottom">
-                <div className="pizza-block__price">{price}</div>
-                <div className="button button--outline button--add">
+                <div className="pizza-block__price">от {price}</div>
+                <div onClick={onClickAdd} className="button button--outline button--add">
                     <svg
                         width="12"
                         height="12"
@@ -41,7 +59,7 @@ const [activeSize, setActiveSize] = React.useState(0);
                         />
                     </svg>
                     <span>Добавить</span>
-                    <i>7</i>
+                    {addedCount > 0 && <i>{addedCount}</i>}
                 </div>
             </div>
         </div>
